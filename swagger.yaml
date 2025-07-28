@@ -1,0 +1,184 @@
+openapi: 3.0.3
+info:
+  title: Customer CRUD API
+  description: REST API for Customer management with pagination and filtering.
+  version: 1.0.0
+servers:
+  - url: https://api.example.com
+paths:
+  /customer:
+    post:
+      summary: Create a new customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerCreate'
+      responses:
+        '201':
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+    get:
+      summary: Get list of customers with pagination and optional name filter
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Page number (1-based)
+        - in: query
+          name: size
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+          description: Number of customers per page
+        - in: query
+          name: customer_name
+          schema:
+            type: string
+          description: Filter by customer name (partial, case-insensitive)
+      responses:
+        '200':
+          description: Paginated list of customers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCustomers'
+
+  /customer/{id}:
+    get:
+      summary: Get a customer by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+    patch:
+      summary: Update customer details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdate'
+      responses:
+        '200':
+          description: Updated customer object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+    delete:
+      summary: Delete a customer by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Deletion confirmation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '404':
+          description: Customer not found
+
+components:
+  schemas:
+    CustomerCreate:
+      type: object
+      required:
+        - customer_name
+        - short_customer_name
+        - address
+        - admin_email
+      properties:
+        customer_name:
+          type: string
+        short_customer_name:
+          type: string
+        address:
+          type: string
+        admin_email:
+          type: string
+          format: email
+
+    CustomerUpdate:
+      type: object
+      properties:
+        customer_name:
+          type: string
+        short_customer_name:
+          type: string
+        address:
+          type: string
+        admin_email:
+          type: string
+          format: email
+
+    Customer:
+      allOf:
+        - $ref: '#/components/schemas/CustomerCreate'
+        - type: object
+          required:
+            - id
+            - created_at
+            - updated_at
+          properties:
+            id:
+              type: integer
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+
+    PaginatedCustomers:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer
